@@ -1,4 +1,6 @@
 //jshint esversion:6
+require('dotenv').config();
+const encrypt = require("mongoose-encryption");
 const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
@@ -10,11 +12,15 @@ app.set('view engine','ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 
 
+
 mongoose.connect("mongodb://127.0.0.1:27017/userDB");
 const userSchema =new mongoose.Schema( {
     email:String,
     password:String
 });
+
+
+userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:['password']});
 
 const User = mongoose.model("User",userSchema);
 
@@ -34,8 +40,8 @@ app.post("/login",(req,res)=>{
     const email = req.body.username;
     const pass = req .body.password;
 
-    User.findOne({email:email, password:pass}).then((user)=>{
-        if(user){
+    User.findOne({email:email}).then((user)=>{
+        if(user.password === pass){
             console.log("user found!");
             res.redirect("/secrets");
         }
